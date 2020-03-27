@@ -38,7 +38,7 @@ def GenerateConfig(context):
     """ Retrieve variable values from the context """
     common_code_commit = context.properties['CommonCodeCommit']
     source_image = context.properties['SourceImage']
-    services_machinetype = context.properties['ServicesMachineType']
+    spre_machinetype = context.properties['SpreMachineType']
     deployment = context.env['deployment']
     zone = context.properties['Zone']
     ssh_key = context.properties['SSHPublicKey']
@@ -48,11 +48,11 @@ def GenerateConfig(context):
     """ Define the resources for the VMs """
     resources = [
         {
-            'name': "{}-services".format(deployment),
+            'name': "{}-spre".format(deployment),
             'type': "gcp-types/compute-v1:instances",
             'properties': {
                 'zone': zone,
-                'machineType': "zones/{}/machineTypes/{}".format(zone, services_machinetype),
+                'machineType': "zones/{}/machineTypes/{}".format(zone, spre_machinetype),
                 'hostname': "spre.viya.sas",
                 'serviceAccounts': [{
                     'email': "$(ref.{}-ansible-svc-account.email)".format(deployment),
