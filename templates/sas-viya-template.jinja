@@ -35,6 +35,17 @@ resources:
      SSHPublicKey: {{ properties["SSHPublicKey"] }}
      BootDisk: {{ properties["ServicesDisk"] }}
      SASHomeDisk: {{ properties["ServicesSASHomeDisk"] }}
+     
+ - name: vm-spre
+  type: vm-spre.py
+  properties:
+     CommonCodeCommit: {{ properties["CommonCodeCommit"] }}
+     SourceImage: {{properties["SourceImage"]}}
+     ServicesMachineType: {{ properties["ServicesMachineType"] }}
+     Zone: {{ properties["Zone"] }}
+     SSHPublicKey: {{ properties["SSHPublicKey"] }}
+     BootDisk: {{ properties["ServicesDisk"] }}
+     SASHomeDisk: {{ properties["ServicesSASHomeDisk"] }}
 
   {% if properties["CASInstanceCount"]  == 1 %}
 - name: vm-controller
