@@ -14,9 +14,9 @@ sed -i.bak -e 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
 # Installing dependencies
 yum -y install git
 # Getting quick start scripts
-git clone https://github.com/sassoftware/quickstart-sas-viya-common /tmp/common
+git clone https://github.com/al3x-ctrl/quickstart-sas-viya-common /tmp/common
 pushd /tmp/common
-git checkout $COMMON_CODE_COMMIT -b $COMMON_CODE_COMMIT
+#git checkout $COMMON_CODE_COMMIT -b $COMMON_CODE_COMMIT
 # Clean up GitHub identifier files
 rm -rf .git*
 popd
