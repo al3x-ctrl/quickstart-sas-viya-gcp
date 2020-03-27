@@ -41,11 +41,11 @@ resources:
   properties:
      CommonCodeCommit: {{ properties["CommonCodeCommit"] }}
      SourceImage: {{properties["SourceImage"]}}
-     ServicesMachineType: {{ properties["ServicesMachineType"] }}
+     ServicesMachineType: {{ properties["SpreMachineType"] }}
      Zone: {{ properties["Zone"] }}
      SSHPublicKey: {{ properties["SSHPublicKey"] }}
-     BootDisk: {{ properties["ServicesDisk"] }}
-     SASHomeDisk: {{ properties["ServicesSASHomeDisk"] }}
+     BootDisk: {{ properties["SpreDisk"] }}
+     SASHomeDisk: {{ properties["SpreSASHomeDisk"] }}
 
   {% if properties["CASInstanceCount"]  == 1 %}
 - name: vm-controller
