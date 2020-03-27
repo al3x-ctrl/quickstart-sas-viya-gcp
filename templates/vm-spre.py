@@ -77,7 +77,7 @@ def GenerateConfig(context):
                         'boot': False,
                         'autoDelete': True,
                         'initializeParams': {
-                            'diskName': "{}-sashome-services".format(deployment),
+                            'diskName': "{}-spre-services".format(deployment),
                             'diskSizeGb': "{}".format(sashome_disk),
                             'description': "SAS_INSTALL_DISK"
                         }
