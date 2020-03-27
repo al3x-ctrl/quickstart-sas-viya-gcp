@@ -44,6 +44,11 @@ resources:
     ServicesMachineType: n1-highmem-16
     ServicesDisk: 10 # boot disk
     ServicesSASHomeDisk: 150 # /opt/sas
+    
+     # Viya Spre machineType
+    SpreMachineType: n1-highmem-16
+    SpreDisk: 10 # boot disk
+    SpreSASHomeDisk: 150 # /opt/sas
 
     # CAS Controller machineType SMP
     ControllerMachineType: n1-standard-2
