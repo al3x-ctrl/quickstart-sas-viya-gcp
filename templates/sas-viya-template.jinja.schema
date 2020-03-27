@@ -8,6 +8,7 @@ imports:
 - path: networks.py
 - path: vm-ansible-controller.py
 - path: vm-services.py
+- path: vm-spre.py
 - path: vm-controller.py
 - path: vm-controller-mpp.py
 - path: vm-worker.py
@@ -17,6 +18,7 @@ imports:
 required:
 - AnsibleControllerMachineType
 - ServicesMachineType
+- SpreMachineType
 - ControllerMachineType
 - ControllerMachineTypeMPP
 - WorkerMachineType
@@ -47,6 +49,10 @@ properties:
   ServicesMachineType:
     type: string
     description: Viya Services machine type defined in GCP
+    
+  SpreMachineType:
+    type: string
+    description: Viya spre machine type defined in GCP
 
   ControllerMachineType:
     type: string
