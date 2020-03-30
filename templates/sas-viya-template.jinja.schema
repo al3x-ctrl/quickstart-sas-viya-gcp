@@ -20,6 +20,8 @@ required:
 - ServicesMachineType
 - SpreMachineType
 - ControllerMachineType
+- SpreDisks
+- SpreDiskSize
 - ControllerMachineTypeMPP
 - WorkerMachineType
 - Zone
@@ -53,6 +55,17 @@ properties:
   SpreMachineType:
     type: string
     description: Viya spre machine type defined in GCP
+
+  SpreDisks:
+    type: integer
+    description: Number of disks for the SPRE
+    default: 2
+    minimum: 2
+    maximum: 8
+
+  SpreDiskSize:
+    type: integer
+    description: Size of the disks for the SPRE
 
   ControllerMachineType:
     type: string
