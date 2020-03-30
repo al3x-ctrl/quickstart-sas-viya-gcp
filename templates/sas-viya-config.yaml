@@ -31,7 +31,6 @@ resources:
     # The number of Viya compute nodes to create. Note: Selecting 1 will install a SMP CAS deployment, but selecting 2 or more will create a MPP CAS deployment (controller + n workers deployment; max number of workers is 10).
     CASInstanceCount: 1
 
-
     ### Advanced configuration options
     
     ## Minimum machineType resources set below.  For a complete list of machineType and resources run in GCP cli:
@@ -49,6 +48,8 @@ resources:
     SpreMachineType: n1-highmem-16
     SpreDisk: 10 # boot disk
     SpreSASHomeDisk: 150 # /opt/sas
+    SpreDisks: 8
+    SpreDiskSize: 1024
 
     # CAS Controller machineType SMP
     ControllerMachineType: n1-standard-2
