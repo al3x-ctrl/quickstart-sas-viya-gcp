@@ -33,7 +33,6 @@ done
 sed -i '/cachedir/s/var/opt\/sas/' /etc/yum.conf
 '''
 
-
 def GenerateConfig(context):
     """ Retrieve variable values from the context """
     common_code_commit = context.properties['CommonCodeCommit']
@@ -44,9 +43,13 @@ def GenerateConfig(context):
     ssh_key = context.properties['SSHPublicKey']
     boot_disk = context.properties['BootDisk']
     sashome_disk = context.properties['SASHomeDisk']
+    nr_of_disks = context.properties['SpreDisks']
+    saswork_disk = context.properties['SpreDiskSize']
 
     """ Define the resources for the VMs """
-    resources = [
+   
+    if nr_of_disks == 2:
+     resources = [
         {
             'name': "{}-spre".format(deployment),
             'type': "gcp-types/compute-v1:instances",
@@ -60,7 +63,7 @@ def GenerateConfig(context):
                         "https://www.googleapis.com/auth/cloud-platform"
                     ]
                 }],
-                'disks': [
+                   'disks': [
                     {
                         'deviceName': 'boot',
                         'type': "PERSISTENT",
@@ -77,9 +80,342 @@ def GenerateConfig(context):
                         'boot': False,
                         'autoDelete': True,
                         'initializeParams': {
-                            'diskName': "{}-spre-services".format(deployment),
+                            'diskName': "{}-spre-home".format(deployment),
                             'diskSizeGb': "{}".format(sashome_disk),
                             'description': "SAS_INSTALL_DISK"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-1',
+                        'type': "SCRATCH",
+                        'interface': "NVME", 
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-1"
+                        }
+                    }, 
+                    {
+                        'deviceName': 'saswork-2',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'interface': "NVME",
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-2"
+                        }
+                    }
+
+                ],
+                'networkInterfaces': [{
+                    'subnetwork': "$(ref.{}-private-subnet.selfLink)".format(deployment)
+                }],
+                'metadata': {
+                    'items': [
+                        {'key': 'ssh-keys', 'value': "sasinstall:{}".format(ssh_key)},
+                        {'key': 'block-project-ssh-keys', 'value': "true"},
+                        {'key': 'startup-script', 'value': spre_startup_script.format(common_code_commit=common_code_commit, deployment=deployment)}
+                    ]
+                },
+                'tags': {
+                    'items': [
+                        'sas-viya-vm'
+                    ]
+                }
+
+            }
+        }
+    ]
+  
+    if nr_of_disks == 3:
+     resources = [
+        {
+            'name': "{}-spre".format(deployment),
+            'type': "gcp-types/compute-v1:instances",
+            'properties': {
+                'zone': zone,
+                'machineType': "zones/{}/machineTypes/{}".format(zone, spre_machinetype),
+                'hostname': "spre.viya.sas",
+                'serviceAccounts': [{
+                    'email': "$(ref.{}-ansible-svc-account.email)".format(deployment),
+                    'scopes': [
+                        "https://www.googleapis.com/auth/cloud-platform"
+                    ]
+                }],
+                   'disks': [
+                    {
+                        'deviceName': 'boot',
+                        'type': "PERSISTENT",
+                        'boot': True,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'sourceImage': "{}".format(source_image),
+                            'diskSizeGb': "{}".format(boot_disk),
+                        }
+                    },
+                    {
+                        'deviceName': 'sashome',
+                        'type': "PERSISTENT",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskName': "{}-spre-home".format(deployment),
+                            'diskSizeGb': "{}".format(sashome_disk),
+                            'description': "SAS_INSTALL_DISK"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-1',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-1"
+                        }
+                    }, 
+                    {
+                        'deviceName': 'saswork-2',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-2"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-3',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-3"
+                        }
+                    }
+
+                ],
+                'networkInterfaces': [{
+                    'subnetwork': "$(ref.{}-private-subnet.selfLink)".format(deployment)
+                }],
+                'metadata': {
+                    'items': [
+                        {'key': 'ssh-keys', 'value': "sasinstall:{}".format(ssh_key)},
+                        {'key': 'block-project-ssh-keys', 'value': "true"},
+                        {'key': 'startup-script', 'value': spre_startup_script.format(common_code_commit=common_code_commit, deployment=deployment)}
+                    ]
+                },
+                'tags': {
+                    'items': [
+                        'sas-viya-vm'
+                    ]
+                }
+
+            }
+        }
+    ]
+
+    if nr_of_disks == 4:
+     resources = [
+        {
+            'name': "{}-spre".format(deployment),
+            'type': "gcp-types/compute-v1:instances",
+            'properties': {
+                'zone': zone,
+                'machineType': "zones/{}/machineTypes/{}".format(zone, spre_machinetype),
+                'hostname': "spre.viya.sas",
+                'serviceAccounts': [{
+                    'email': "$(ref.{}-ansible-svc-account.email)".format(deployment),
+                    'scopes': [
+                        "https://www.googleapis.com/auth/cloud-platform"
+                    ]
+                }],
+                   'disks': [
+                    {
+                        'deviceName': 'boot',
+                        'type': "PERSISTENT",
+                        'boot': True,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'sourceImage': "{}".format(source_image),
+                            'diskSizeGb': "{}".format(boot_disk),
+                        }
+                    },
+                    {
+                        'deviceName': 'sashome',
+                        'type': "PERSISTENT",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskName': "{}-spre-home".format(deployment),
+                            'diskSizeGb': "{}".format(sashome_disk),
+                            'description': "SAS_INSTALL_DISK"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-1',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-1"
+                        }
+                    }, 
+                    {
+                        'deviceName': 'saswork-2',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-2"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-3',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-3"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-4',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-4"
+                        }
+                    }
+
+                ],
+                'networkInterfaces': [{
+                    'subnetwork': "$(ref.{}-private-subnet.selfLink)".format(deployment)
+                }],
+                'metadata': {
+                    'items': [
+                        {'key': 'ssh-keys', 'value': "sasinstall:{}".format(ssh_key)},
+                        {'key': 'block-project-ssh-keys', 'value': "true"},
+                        {'key': 'startup-script', 'value': spre_startup_script.format(common_code_commit=common_code_commit, deployment=deployment)}
+                    ]
+                },
+                'tags': {
+                    'items': [
+                        'sas-viya-vm'
+                    ]
+                }
+
+            }
+        }
+    ]
+
+    if nr_of_disks == 5:
+     resources = [
+        {
+            'name': "{}-spre".format(deployment),
+            'type': "gcp-types/compute-v1:instances",
+            'properties': {
+                'zone': zone,
+                'machineType': "zones/{}/machineTypes/{}".format(zone, spre_machinetype),
+                'hostname': "spre.viya.sas",
+                'serviceAccounts': [{
+                    'email': "$(ref.{}-ansible-svc-account.email)".format(deployment),
+                    'scopes': [
+                        "https://www.googleapis.com/auth/cloud-platform"
+                    ]
+                }],
+                   'disks': [
+                    {
+                        'deviceName': 'boot',
+                        'type': "PERSISTENT",
+                        'boot': True,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'sourceImage': "{}".format(source_image),
+                            'diskSizeGb': "{}".format(boot_disk),
+                        }
+                    },
+                    {
+                        'deviceName': 'sashome',
+                        'type': "PERSISTENT",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskName': "{}-spre-home".format(deployment),
+                            'diskSizeGb': "{}".format(sashome_disk),
+                            'description': "SAS_INSTALL_DISK"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-1',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-1"
+                        }
+                    }, 
+                    {
+                        'deviceName': 'saswork-2',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-2"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-3',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-3"
+                        }
+                    }, 
+                    {
+                        'deviceName': 'saswork-4',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-4"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-5',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-5"
                         }
                     }
                 ],
@@ -98,8 +434,416 @@ def GenerateConfig(context):
                         'sas-viya-vm'
                     ]
                 }
+
             }
         }
     ]
 
+    if nr_of_disks == 6:
+     resources = [
+        {
+            'name': "{}-spre".format(deployment),
+            'type': "gcp-types/compute-v1:instances",
+            'properties': {
+                'zone': zone,
+                'machineType': "zones/{}/machineTypes/{}".format(zone, spre_machinetype),
+                'hostname': "spre.viya.sas",
+                'serviceAccounts': [{
+                    'email': "$(ref.{}-ansible-svc-account.email)".format(deployment),
+                    'scopes': [
+                        "https://www.googleapis.com/auth/cloud-platform"
+                    ]
+                }],
+                   'disks': [
+                    {
+                        'deviceName': 'boot',
+                        'type': "PERSISTENT",
+                        'boot': True,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'sourceImage': "{}".format(source_image),
+                            'diskSizeGb': "{}".format(boot_disk),
+                        }
+                    },
+                    {
+                        'deviceName': 'sashome',
+                        'type': "PERSISTENT",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskName': "{}-spre-home".format(deployment),
+                            'diskSizeGb': "{}".format(sashome_disk),
+                            'description': "SAS_INSTALL_DISK"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-1',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-1"
+                        }
+                    }, 
+                    {
+                        'deviceName': 'saswork-2',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-2"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-3',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-3"
+                        }
+                    }, 
+                    {
+                        'deviceName': 'saswork-4',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-4"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-5',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-5"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-6',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-6"
+                        }
+                    }
+                ],
+                'networkInterfaces': [{
+                    'subnetwork': "$(ref.{}-private-subnet.selfLink)".format(deployment)
+                }],
+                'metadata': {
+                    'items': [
+                        {'key': 'ssh-keys', 'value': "sasinstall:{}".format(ssh_key)},
+                        {'key': 'block-project-ssh-keys', 'value': "true"},
+                        {'key': 'startup-script', 'value': spre_startup_script.format(common_code_commit=common_code_commit, deployment=deployment)}
+                    ]
+                },
+                'tags': {
+                    'items': [
+                        'sas-viya-vm'
+                    ]
+                }
+
+            }
+        }
+    ]
+  
+    if nr_of_disks == 7:
+     resources = [
+        {
+            'name': "{}-spre".format(deployment),
+            'type': "gcp-types/compute-v1:instances",
+            'properties': {
+                'zone': zone,
+                'machineType': "zones/{}/machineTypes/{}".format(zone, spre_machinetype),
+                'hostname': "spre.viya.sas",
+                'serviceAccounts': [{
+                    'email': "$(ref.{}-ansible-svc-account.email)".format(deployment),
+                    'scopes': [
+                        "https://www.googleapis.com/auth/cloud-platform"
+                    ]
+                }],
+                   'disks': [
+                    {
+                        'deviceName': 'boot',
+                        'type': "PERSISTENT",
+                        'boot': True,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'sourceImage': "{}".format(source_image),
+                            'diskSizeGb': "{}".format(boot_disk),
+                        }
+                    },
+                    {
+                        'deviceName': 'sashome',
+                        'type': "PERSISTENT",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskName': "{}-spre-home".format(deployment),
+                            'diskSizeGb': "{}".format(sashome_disk),
+                            'description': "SAS_INSTALL_DISK"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-1',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-1"
+                        }
+                    }, 
+                    {
+                        'deviceName': 'saswork-2',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-2"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-3',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-3"
+                        }
+                    }, 
+                    {
+                        'deviceName': 'saswork-4',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-4"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-5',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-5"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-6',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-6"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-7',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-7"
+                        }
+                    }
+
+                ],
+                'networkInterfaces': [{
+                    'subnetwork': "$(ref.{}-private-subnet.selfLink)".format(deployment)
+                }],
+                'metadata': {
+                    'items': [
+                        {'key': 'ssh-keys', 'value': "sasinstall:{}".format(ssh_key)},
+                        {'key': 'block-project-ssh-keys', 'value': "true"},
+                        {'key': 'startup-script', 'value': spre_startup_script.format(common_code_commit=common_code_commit, deployment=deployment)}
+                    ]
+                },
+                'tags': {
+                    'items': [
+                        'sas-viya-vm'
+                    ]
+                }
+
+            }
+        }
+    ]
+
+    if nr_of_disks == 8:
+     resources = [
+        {
+            'name': "{}-spre".format(deployment),
+            'type': "gcp-types/compute-v1:instances",
+            'properties': {
+                'zone': zone,
+                'machineType': "zones/{}/machineTypes/{}".format(zone, spre_machinetype),
+                'hostname': "spre.viya.sas",
+                'serviceAccounts': [{
+                    'email': "$(ref.{}-ansible-svc-account.email)".format(deployment),
+                    'scopes': [
+                        "https://www.googleapis.com/auth/cloud-platform"
+                    ]
+                }],
+                   'disks': [
+                    {
+                        'deviceName': 'boot',
+                        'type': "PERSISTENT",
+                        'boot': True,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'sourceImage': "{}".format(source_image),
+                            'diskSizeGb': "{}".format(boot_disk),
+                        }
+                    },
+                    {
+                        'deviceName': 'sashome',
+                        'type': "PERSISTENT",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskName': "{}-spre-home".format(deployment),
+                            'diskSizeGb': "{}".format(sashome_disk),
+                            'description': "SAS_INSTALL_DISK"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-1',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-1"
+                        }
+                    }, 
+                    {
+                        'deviceName': 'saswork-2',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-2"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-3',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-3"
+                        }
+                    }, 
+                    {
+                        'deviceName': 'saswork-4',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-4"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-5',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-5"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-6',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-6"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-7',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-7"
+                        }
+                    },
+                    {
+                        'deviceName': 'saswork-8',
+                        'type': "SCRATCH",
+                        'boot': False,
+                        'autoDelete': True,
+                        'initializeParams': {
+                            'diskSizeGb': "375",
+                            'diskType': "zones/{}/diskTypes/local-ssd".format(zone),
+                            'description': "sas-work-8"
+                        }
+                    }
+
+                ],
+                'networkInterfaces': [{
+                    'subnetwork': "$(ref.{}-private-subnet.selfLink)".format(deployment)
+                }],
+                'metadata': {
+                    'items': [
+                        {'key': 'ssh-keys', 'value': "sasinstall:{}".format(ssh_key)},
+                        {'key': 'block-project-ssh-keys', 'value': "true"},
+                        {'key': 'startup-script', 'value': spre_startup_script.format(common_code_commit=common_code_commit, deployment=deployment)}
+                    ]
+                },
+                'tags': {
+                    'items': [
+                        'sas-viya-vm'
+                    ]
+                }
+
+            }
+        }
+    ]
+    
     return {'resources': resources}
