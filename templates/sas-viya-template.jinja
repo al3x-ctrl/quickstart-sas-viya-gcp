@@ -46,6 +46,8 @@ resources:
      SSHPublicKey: {{ properties["SSHPublicKey"] }}
      BootDisk: {{ properties["SpreDisk"] }}
      SASHomeDisk: {{ properties["SpreSASHomeDisk"] }}
+     SpreDisks: {{ properties["SpreDisks"] }}
+     SpreDiskSize: {{ properties["SpreDiskSize"] }}
 
   {% if properties["CASInstanceCount"]  == 1 %}
 - name: vm-controller
